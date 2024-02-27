@@ -1,6 +1,7 @@
 #setwd("C:/PAN/IHTM/MMID2023")
 
 library(deSolve)
+library(tidyverse)
 
 # set up a function to solve and fit the model
 HepE<-function(t, state, parameters) 
@@ -39,7 +40,7 @@ HepE<-function(t, state, parameters)
                   omega=(1/(10*52)),  # rate of loss of immunity = 1/(average duration of immunity)
                   gamma=(1/2),        # rate of movement from latent to infectious stage = 1/(average latent period)
                   tau=(1/4),          # rate of recovery = 1/(average duration of infection)
-                  report=1/7         # proportion of all infections that are reported
+                  report=1/7         # proportion of all infections that are reported (14%)
   )
   
  
@@ -48,11 +49,20 @@ HepE<-function(t, state, parameters)
   # solve the ODEs
   out <- ode(y = state, times = times, func = HepE, parms = parameters)
   
-  pop<-out[,"S"]+out[,"E"]+out[,"I"]+out[,"R"]  
-  plot(out[,"time"],pop,type='l',xlab='week')
-  plot(out)
+  pop<-out[,"S"]+out[,"E"]+out[,"I"]+out[,"R"]  # define that population is the sum of all compartments
+  plot(out[,"time"],pop,type='l',xlab='week') # plot population over time to confirm it remains constant
+  plot(out) # plot each of the variables over time
+  
+out1 <- as.data.frame(out) %>%
+  pivot_longer(cols = S:R, names_to = "States", values_to = "Number")
+
+ggplot(out1, aes(x=time, y=Number, color=States))+
+  geom_line()+
+  theme_bw()
+
 #map with real data
-  cases <- read.csv('hepEdata_begin.csv')
+  #cases <- read.csv('hepEdata_begin.csv')
+  cases <- read.csv('hepEdata.csv')
   week_start <- 38
   week_stop <- 78
   dev.new()

@@ -2,7 +2,7 @@
 
 library(deSolve)
 
-cases <- read.csv('hepEdata_end.csv')
+cases <- read.csv('hepEdata_end-4.csv')
 
 # set up a function to solve the model
 HepE<-function(t, state, parameters) 

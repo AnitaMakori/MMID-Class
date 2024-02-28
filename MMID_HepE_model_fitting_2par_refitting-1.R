@@ -2,7 +2,7 @@
 
 library(deSolve)
 
-cases <- read.csv('hepEdata_end.csv')
+cases <- read.csv('hepEdata_end-3.csv')
 
 hepENLL<- function(par)
 {

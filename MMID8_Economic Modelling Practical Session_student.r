@@ -12,11 +12,11 @@
 # vaccaination
 
 #setwd('/Users/Nantasit/Documents/MORU 20xx/MMID session 20xx/Mathematical and Economic Modelling in R')
-setwd()
+#setwd()
 
 library(deSolve)
 rm(list=ls())
-data <- read.csv('hepEdata_end.csv')
+data <- read.csv('hepEdata_end-5.csv')
 
 # Set the start and end time for the model simulation
 week_start <- 38
@@ -90,16 +90,16 @@ base_par <- c(mui=(1/(50*52)),    # birth
 ############################
 #MODEL PARAMETERS
 lat_par<-base_par
-lat_par['lat_cov_i'] <-  # COMPLETE: intervention coverage of latrines (*3 times from baseline) 
-lat_par['lat_eff'] <-  # COMPLETE: effectiveness of latrines
+lat_par['lat_cov_i'] <- 0.8 # COMPLETE: intervention coverage of latrines (*3 times from baseline) 
+lat_par['lat_eff'] <- 0.7 # COMPLETE: effectiveness of latrines
 lat_par
 
 ############################
 #Intervention2: Vaccine
 ############################
 vac_par<-base_par
-vac_par['vac_cov_i'] <-  # COMPLETE: Vaccination coverage
-vac_par['vac_eff'] <-  # COMPLETE: Vaccination effectiveness
+vac_par['vac_cov_i'] <- 0.2 # COMPLETE: Vaccination coverage
+vac_par['vac_eff'] <- 0.3 # COMPLETE: Vaccination effectiveness
 vac_par
 
 
@@ -117,6 +117,9 @@ out_vac <- ode(y = state, times = times, func = HepE, parms = vac_par)
 Inc_base<-base_par["report"]*base_par["gamma"]*out_base[,"E"]
 Inc_lat<-lat_par["report"]*lat_par["gamma"]*out_lat[,"E"]
 Inc_vac<-vac_par["report"]*vac_par["gamma"]*out_vac[,"E"]
+
+## use reporting rate to compute incidence because we assume that reporting rate 
+## is a proxy of treatment-seeking rate (only reported cases incur cost of treatment)
 
 Total_case_base <- sum(Inc_base)  #the outbreak finish at day 281
 Total_case_lat <- sum(Inc_lat)
@@ -142,10 +145,10 @@ Total_death_vac
 #Economic Evaluation
 ############################
 #Costs
-C_latrine <-           # COMPLETE: Cost of latrine per unit ($US)
-Num_household <-   # NCOMPLETE: umber of household in the population (average 5 people per household) 
-C_vaccine<-            # COMPLETE: Cost of vaccine per person ($US)
-C_medical <-            # COMPLETE: Average medical cost of hepatitis E per case ($US)
+C_latrine <- 200          # COMPLETE: Cost of latrine per unit ($US)
+Num_household <- initP/5  # COMPLETE: Number of household in the population (average 5 people per household) 
+C_vaccine<- 350           # COMPLETE: Cost of vaccine per person ($US)
+C_medical <- 30          # COMPLETE: Average medical cost of hepatitis E per case ($US)
 
 Total_cost_base <- C_medical*Total_case_base
 Total_cost_lat <- C_latrine*Num_household*lat_par[['lat_cov_i']]+C_medical*Total_case_lat
@@ -158,8 +161,8 @@ Total_cost_vac
 
 
 #Health outcomes
-YLD.case<-  # COMPLETE: Life year with disability per case (disability weight at 0.3 for 45 days, {0.3*45/365})
-YLL.death<-     # COMPLETE: Life years lost per death
+YLD.case<- 0.037  # COMPLETE: Life year with disability per case (disability weight at 0.3 for 45 days, {0.3*45/365})
+YLL.death<- 30    # COMPLETE: Life years lost per death
 
 
 DALYsloss_base <-Total_death_base*YLL.death+Total_case_base*YLD.case
@@ -193,10 +196,11 @@ colnames(All_res)<-c("Incremental Cost", "DALYs_averted", "ICER")
 rownames(All_res)<-c("Latrines", "Vaccine")
 All_res
 
+options(scipen=100) # remove scientific notation
 
 #Plot to see results on the ICER plane
 plot(All_res[,2], All_res[,1], xlim=c(-1,1500), ylim=c(-100,800000), ylab="Incremental costs ($USD)", xlab="DALY loss", pch=18, col=c("red","blue"), main="CEA of Interventions for HepE")
 text(All_res[,2], All_res[,1],label=c("Latrines","Vaccine"), cex=0.8, pos=3)
-abline(a=0, b=1000, lty=3, col='black')
+abline(a=0, b=1000, lty=3, col='black') # add WTP threshold
 abline(v = 0, h = 0)
 
